@@ -21,7 +21,21 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+/* Global constants ---------------------------------------------------------*/
+// Definiera en global array för att representera 7-segment display mönster
+const uint8_t sseg[10] = {
+    0x3F,  // 0: A, B, C, D, E, F
+    0x06,  // 1: B, C
+    0x5B,  // 2: A, B, G, E, D
+    0x4F,  // 3: A, B, G, C, D
+    0x66,  // 4: F, G, B, C
+    0x6D,  // 5: A, F, G, C, D
+    0x7D,  // 6: A, F, G, E, C, D
+    0x07,  // 7: A, B, C
+    0x7F,  // 8: A, B, C, D, E, F, G
+    0x6F   // 9: A, B, C, D, F, G
+};
+const uint8_t sseg_err = 0xDC;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -130,8 +144,21 @@ void put_die_dots(uint8_t die_nbr) {
     }
 }
 
-/* USER CODE END 0 */
+void put_on_sseg(uint8_t dec_nbr)
+{
+	 uint8_t display_value;
 
+
+	    if (dec_nbr < 10) {
+	        display_value = ~sseg [dec_nbr];
+	    } else {
+	        display_value = ~sseg[sseg_err];
+	    }
+
+
+	    GPIOC->ODR = display_value;
+}
+/* USER CODE END 0 */
 /**
   * @brief  The application entry point.
   * @retval int
@@ -164,39 +191,51 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 	uint8_t die_value = 1; // 1 <= die_value <= 6
-
+	for(uint8_t i = 0; i <= 9; i++)
+		{
+			put_on_sseg(i);
+			HAL_Delay(333);
+		}
+	put_on_sseg(1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   int pressed = 0;
   while (1)
   {
-    /* USER CODE END WHILE */
+
+
 
 	  pressed = HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin);
-	  if(pressed == GPIO_PIN_RESET)
-	  {
-		  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
-		  die_value++;
-		  if (die_value > 6)
-		  {
-			  die_value = 1;
-		  }
-		  put_die_dots(die_value);
+	   if(pressed == GPIO_PIN_RESET)
+	     {
+	        HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+	        die_value = ((rand()%6)+1);
+	      /*  die_value++;
+	        if (die_value > 6)
+	        {
+	           die_value = 1;
+	        }*/
+	        put_die_dots(die_value);
+	        put_on_sseg(die_value);
 
+	        HAL_Delay(100);
 
-		  HAL_Delay(100);
+	     }
+	     else
+	     {
+	          GPIO_TypeDef*    ld2_gpio    = GPIOA;
+	          uint16_t        ld2_pin_nbr    = 5;
+	          uint16_t        ld2_pin        = 0x01 << ld2_pin_nbr;
+	          HAL_GPIO_WritePin(ld2_gpio, ld2_pin, GPIO_PIN_RESET);
+	      }
 
-	  }
-	  else
-	  {
-		  GPIO_TypeDef*	ld2_gpio	= GPIOA;
-		  uint16_t		ld2_pin_nbr	= 5;
-		  uint16_t		ld2_pin		= 0x01 << ld2_pin_nbr;
-		  HAL_GPIO_WritePin(ld2_gpio, ld2_pin, GPIO_PIN_RESET);
-	  }
+    /* USER CODE END WHILE */
+
     /* USER CODE BEGIN 3 */
+
   }
   /* USER CODE END 3 */
 }
@@ -298,6 +337,10 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3
+                          |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, LD2_Pin|DI_A_Pin|DI_B_Pin|DI_C_Pin
                           |DI_D_Pin, GPIO_PIN_RESET);
 
@@ -309,6 +352,15 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PC0 PC1 PC2 PC3
+                           PC4 PC5 PC6 PC7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3
+                          |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LD2_Pin DI_A_Pin DI_B_Pin DI_C_Pin
                            DI_D_Pin */
