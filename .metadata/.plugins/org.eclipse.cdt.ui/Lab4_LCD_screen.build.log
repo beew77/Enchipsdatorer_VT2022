@@ -1,0 +1,10 @@
+19:21:56 **** Incremental Build of configuration Debug for project Lab4_LCD_screen ****
+make -j4 all 
+arm-none-eabi-size  Lab4_LCD_screen.elf 
+   text	   data	    bss	    dec	    hex	filename
+  16776	     96	   2224	  19096	   4a98	Lab4_LCD_screen.elf
+Finished building: default.size.stdout
+ 
+
+19:21:57 Build Finished. 0 errors, 0 warnings. (took 309ms)
+
